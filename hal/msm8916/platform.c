@@ -339,6 +339,17 @@ static const char * const device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_OUT_SPEAKER_AND_LINE] = "speaker-and-line",
     [SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES_EXTERNAL_1] = "speaker-and-headphones-ext-1",
     [SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES_EXTERNAL_2] = "speaker-and-headphones-ext-2",
+#ifdef SEC_AUDIO_ENABLED
+    [SND_DEVICE_OUT_VOICE_HANDSET] = "voice-call-handset",
+    [SND_DEVICE_OUT_VOICE_SPEAKER] = "voice-call-speaker",
+    [SND_DEVICE_OUT_VOICE_SPEAKER_2] = "voice-call-speaker",
+    [SND_DEVICE_OUT_VOICE_SPEAKER_WSA] = "voice-call-speaker",
+    [SND_DEVICE_OUT_VOICE_SPEAKER_2_WSA] = "voice-call-speaker",
+    [SND_DEVICE_OUT_VOICE_SPEAKER_VBAT] = "voice-call-speaker",
+    [SND_DEVICE_OUT_VOICE_SPEAKER_2_VBAT] = "voice-call-speaker",
+    [SND_DEVICE_OUT_VOICE_HEADPHONES] = "voice-call-headset",
+    [SND_DEVICE_OUT_VOICE_LINE] = "voice-call-headset",
+#else
     [SND_DEVICE_OUT_VOICE_HANDSET] = "voice-handset",
     [SND_DEVICE_OUT_VOICE_SPEAKER] = "voice-speaker",
     [SND_DEVICE_OUT_VOICE_SPEAKER_2] = "voice-speaker-2",
@@ -348,6 +359,7 @@ static const char * const device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_OUT_VOICE_SPEAKER_2_VBAT] = "vbat-voice-speaker-2",
     [SND_DEVICE_OUT_VOICE_HEADPHONES] = "voice-headphones",
     [SND_DEVICE_OUT_VOICE_LINE] = "voice-line",
+#endif
     [SND_DEVICE_OUT_HDMI] = "hdmi",
     [SND_DEVICE_OUT_SPEAKER_AND_HDMI] = "speaker-and-hdmi",
     [SND_DEVICE_OUT_BT_SCO] = "bt-sco-headset",
@@ -379,6 +391,29 @@ static const char * const device_table[SND_DEVICE_MAX] = {
 #endif
 
     /* Capture sound devices */
+#ifdef SEC_AUDIO_ENABLED
+    [SND_DEVICE_IN_HANDSET_MIC] = "rec-main-mic",
+    [SND_DEVICE_IN_HANDSET_MIC_EXTERNAL] = "rec-main-mic",
+    [SND_DEVICE_IN_HANDSET_MIC_AEC] = "rec-main-mic",
+    [SND_DEVICE_IN_HANDSET_MIC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_HANDSET_MIC_AEC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_HANDSET_DMIC] = "rec-main-mic",
+    [SND_DEVICE_IN_HANDSET_DMIC_AEC] = "rec-main-mic",
+    [SND_DEVICE_IN_HANDSET_DMIC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_HANDSET_DMIC_AEC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_SPEAKER_MIC] = "rec-main-mic",
+    [SND_DEVICE_IN_SPEAKER_MIC_AEC] = "rec-main-mic",
+    [SND_DEVICE_IN_SPEAKER_MIC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_SPEAKER_MIC_AEC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_SPEAKER_DMIC] = "rec-main-mic",
+    [SND_DEVICE_IN_SPEAKER_DMIC_AEC] = "rec-main-mic",
+    [SND_DEVICE_IN_SPEAKER_DMIC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_SPEAKER_DMIC_AEC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_HEADSET_MIC] = "rec-headset-mic",
+    [SND_DEVICE_IN_HEADSET_MIC_FLUENCE] = "rec-headset-mic",
+    [SND_DEVICE_IN_VOICE_SPEAKER_MIC] = "voice-call-main-mic",
+    [SND_DEVICE_IN_VOICE_HEADSET_MIC] = "voice-call-headset-mic",
+#else
     [SND_DEVICE_IN_HANDSET_MIC] = "handset-mic",
     [SND_DEVICE_IN_HANDSET_MIC_EXTERNAL] = "handset-mic-ext",
     [SND_DEVICE_IN_HANDSET_MIC_AEC] = "handset-mic",
@@ -400,11 +435,25 @@ static const char * const device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_IN_HEADSET_MIC_FLUENCE] = "headset-mic",
     [SND_DEVICE_IN_VOICE_SPEAKER_MIC] = "voice-speaker-mic",
     [SND_DEVICE_IN_VOICE_HEADSET_MIC] = "voice-headset-mic",
+#endif
     [SND_DEVICE_IN_HDMI_MIC] = "hdmi-mic",
     [SND_DEVICE_IN_BT_SCO_MIC] = "bt-sco-mic",
     [SND_DEVICE_IN_BT_SCO_MIC_NREC] = "bt-sco-mic",
     [SND_DEVICE_IN_BT_SCO_MIC_WB] = "bt-sco-mic-wb",
     [SND_DEVICE_IN_BT_SCO_MIC_WB_NREC] = "bt-sco-mic-wb",
+#ifdef SEC_AUDIO_ENABLED
+    [SND_DEVICE_IN_CAMCORDER_MIC] = "rec-main-mic",
+    [SND_DEVICE_IN_VOICE_DMIC] = "voice-call-main-mic",
+    [SND_DEVICE_IN_VOICE_SPEAKER_DMIC] = "voice-call-main-mic",
+    [SND_DEVICE_IN_VOICE_SPEAKER_QMIC] = "voice-call-main-mic",
+    [SND_DEVICE_IN_VOICE_TTY_FULL_HEADSET_MIC] = "TTY-full-mic",
+    [SND_DEVICE_IN_VOICE_TTY_VCO_HANDSET_MIC] = "TTY-vco-mic",
+    [SND_DEVICE_IN_VOICE_TTY_HCO_HEADSET_MIC] = "TTY-headset-mic",
+    [SND_DEVICE_IN_VOICE_REC_MIC] = "rec-main-mic",
+    [SND_DEVICE_IN_VOICE_REC_MIC_NS] = "rec-main-mic",
+    [SND_DEVICE_IN_VOICE_REC_DMIC_STEREO] = "rec-stereo-mic",
+    [SND_DEVICE_IN_VOICE_REC_DMIC_FLUENCE] = "rec-main-mic",
+#else
     [SND_DEVICE_IN_CAMCORDER_MIC] = "camcorder-mic",
     [SND_DEVICE_IN_VOICE_DMIC] = "voice-dmic-ef",
     [SND_DEVICE_IN_VOICE_SPEAKER_DMIC] = "voice-speaker-dmic-ef",
@@ -416,6 +465,7 @@ static const char * const device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_IN_VOICE_REC_MIC_NS] = "voice-rec-mic",
     [SND_DEVICE_IN_VOICE_REC_DMIC_STEREO] = "voice-rec-dmic-ef",
     [SND_DEVICE_IN_VOICE_REC_DMIC_FLUENCE] = "voice-rec-dmic-ef-fluence",
+#endif
     [SND_DEVICE_IN_VOICE_RX] = "voice-rx",
     [SND_DEVICE_IN_USB_HEADSET_MIC] = "usb-headset-mic",
     [SND_DEVICE_IN_CAPTURE_FM] = "capture-fm",
@@ -2810,7 +2860,11 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
                 adev->acdb_settings |= ANC_FLAG;
             } else if (my_data->fluence_type == FLUENCE_NONE ||
                 my_data->fluence_in_voice_call == false) {
+#ifdef SEC_AUDIO_ENABLED
+                snd_device = SND_DEVICE_IN_VOICE_DMIC;
+#else
                 snd_device = SND_DEVICE_IN_HANDSET_MIC;
+#endif
                 if (audio_extn_hfp_is_active(adev))
                     platform_set_echo_reference(adev, true, out_device);
             } else {
