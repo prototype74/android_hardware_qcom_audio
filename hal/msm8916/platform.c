@@ -69,6 +69,11 @@
 #define AUDIO_DATA_BLOCK_MIXER_CTL "HDMI EDID"
 #define CVD_VERSION_MIXER_CTL "CVD Version"
 
+#ifdef SEC_AUDIO_ENABLED
+// Samsung CallState bitmask definition from telephony
+#define SEC_CALL_STATE_VOLTE_VOICE 0x200
+#endif
+
 #define MAX_COMPRESS_OFFLOAD_FRAGMENT_SIZE (256 * 1024)
 #define MIN_COMPRESS_OFFLOAD_FRAGMENT_SIZE (2 * 1024)
 #define COMPRESS_OFFLOAD_FRAGMENT_SIZE_FOR_AV_STREAMING (2 * 1024)
@@ -493,6 +498,18 @@ static const char * const device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_IN_UNPROCESSED_THREE_MIC] = "three-mic",
     [SND_DEVICE_IN_UNPROCESSED_QUAD_MIC] = "quad-mic",
     [SND_DEVICE_IN_UNPROCESSED_HEADSET_MIC] = "headset-mic",
+#ifdef SEC_AUDIO_ENABLED
+    [SND_DEVICE_OUT_VOLTE_HANDSET] = "VoLTE-voice-handset",
+    [SND_DEVICE_OUT_VOLTE_SPEAKER] = "VoLTE-voice-speaker",
+    [SND_DEVICE_OUT_VOLTE_HEADPHONES] = "VoLTE-voice-headset",
+    [SND_DEVICE_OUT_VOICE_CP2_HANDSET] = "voice-call-cp2-handset",
+    [SND_DEVICE_OUT_VOICE_CP2_SPEAKER] = "voice-call-cp2-speaker",
+    [SND_DEVICE_OUT_VOICE_CP2_HEADPHONES] = "voice-call-cp2-headset",
+    [SND_DEVICE_IN_VOLTE_MAIN_MIC] = "VoLTE-voice-main-mic",
+    [SND_DEVICE_IN_VOLTE_HEADSET_MIC] = "VoLTE-voice-headset-mic",
+    [SND_DEVICE_IN_VOICE_CP2_MAIN_MIC] = "voice-call-cp2-main-mic",
+    [SND_DEVICE_IN_VOICE_CP2_HEADSET_MIC] = "voice-call-cp2-headset-mic",
+#endif
 };
 
 // Platform specific backend bit width table
@@ -618,7 +635,18 @@ static int acdb_device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_IN_UNPROCESSED_THREE_MIC] = 145,
     [SND_DEVICE_IN_UNPROCESSED_QUAD_MIC] = 146,
     [SND_DEVICE_IN_UNPROCESSED_HEADSET_MIC] = 147,
-
+#ifdef SEC_AUDIO_ENABLED
+    [SND_DEVICE_OUT_VOLTE_HANDSET] = 7,
+    [SND_DEVICE_OUT_VOLTE_SPEAKER] = 14,
+    [SND_DEVICE_OUT_VOLTE_HEADPHONES] = 10,
+    [SND_DEVICE_OUT_VOICE_CP2_HANDSET] = 7,
+    [SND_DEVICE_OUT_VOICE_CP2_SPEAKER] = 14,
+    [SND_DEVICE_OUT_VOICE_CP2_HEADPHONES] = 10,
+    [SND_DEVICE_IN_VOLTE_MAIN_MIC] = 4,
+    [SND_DEVICE_IN_VOLTE_HEADSET_MIC] = 8,
+    [SND_DEVICE_IN_VOICE_CP2_MAIN_MIC] = 4,
+    [SND_DEVICE_IN_VOICE_CP2_HEADSET_MIC] = 8,
+#endif
 };
 
 struct name_to_index {
@@ -2661,6 +2689,13 @@ snd_device_t platform_get_output_snd_device(void *platform, struct stream_out *o
                 else
                     snd_device = SND_DEVICE_OUT_VOICE_ANC_HEADSET;
             } else {
+#ifdef SEC_AUDIO_ENABLED
+                if (adev->sec_call_state & SEC_CALL_STATE_VOLTE_VOICE)
+                    snd_device = SND_DEVICE_OUT_VOLTE_HEADPHONES;
+                else if (adev->sec_phone_type == 1)
+                    snd_device = SND_DEVICE_OUT_VOICE_CP2_HEADPHONES;
+                else
+#endif
                 snd_device = SND_DEVICE_OUT_VOICE_HEADPHONES;
             }
         } else if (devices & AUDIO_DEVICE_OUT_ALL_SCO) {
@@ -2681,7 +2716,18 @@ snd_device_t platform_get_output_snd_device(void *platform, struct stream_out *o
                         snd_device = SND_DEVICE_OUT_VOICE_SPEAKER_2_WSA;
                 } else {
                     if (my_data->mono_speaker == SPKR_1)
+#ifdef SEC_AUDIO_ENABLED
+                    {
+                        if (adev->sec_call_state & SEC_CALL_STATE_VOLTE_VOICE)
+                            snd_device = SND_DEVICE_OUT_VOLTE_SPEAKER;
+                        else if (adev->sec_phone_type == 1)
+                            snd_device = SND_DEVICE_OUT_VOICE_CP2_SPEAKER;
+                        else
+                            snd_device = SND_DEVICE_OUT_VOICE_SPEAKER;
+                    }
+#else
                         snd_device = SND_DEVICE_OUT_VOICE_SPEAKER;
+#endif
                     else
                         snd_device = SND_DEVICE_OUT_VOICE_SPEAKER_2;
             }
@@ -2694,6 +2740,13 @@ snd_device_t platform_get_output_snd_device(void *platform, struct stream_out *o
             if (audio_extn_should_use_handset_anc(channel_count))
                 snd_device = SND_DEVICE_OUT_ANC_HANDSET;
             else
+#ifdef SEC_AUDIO_ENABLED
+            if (adev->sec_call_state & SEC_CALL_STATE_VOLTE_VOICE)
+                snd_device = SND_DEVICE_OUT_VOLTE_HANDSET;
+            else if (adev->sec_phone_type == 1)
+                snd_device = SND_DEVICE_OUT_VOICE_CP2_HANDSET;
+            else
+#endif
                 snd_device = SND_DEVICE_OUT_VOICE_HANDSET;
         } else if (devices & AUDIO_DEVICE_OUT_TELEPHONY_TX)
             snd_device = SND_DEVICE_OUT_VOICE_TX;
@@ -2861,7 +2914,12 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
             } else if (my_data->fluence_type == FLUENCE_NONE ||
                 my_data->fluence_in_voice_call == false) {
 #ifdef SEC_AUDIO_ENABLED
-                snd_device = SND_DEVICE_IN_VOICE_DMIC;
+                if (adev->sec_call_state & SEC_CALL_STATE_VOLTE_VOICE)
+                    snd_device = SND_DEVICE_IN_VOLTE_MAIN_MIC;
+                else if (adev->sec_phone_type == 1)
+                    snd_device = SND_DEVICE_IN_VOICE_CP2_MAIN_MIC;
+                else
+                    snd_device = SND_DEVICE_IN_VOICE_DMIC;
 #else
                 snd_device = SND_DEVICE_IN_HANDSET_MIC;
 #endif
@@ -2872,6 +2930,13 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
                 adev->acdb_settings |= DMIC_FLAG;
             }
         } else if (out_device & AUDIO_DEVICE_OUT_WIRED_HEADSET) {
+#ifdef SEC_AUDIO_ENABLED
+            if (adev->sec_call_state & SEC_CALL_STATE_VOLTE_VOICE)
+                snd_device = SND_DEVICE_IN_VOLTE_HEADSET_MIC;
+            else if (adev->sec_phone_type == 1)
+                snd_device = SND_DEVICE_IN_VOICE_CP2_HEADSET_MIC;
+            else
+#endif
             snd_device = SND_DEVICE_IN_VOICE_HEADSET_MIC;
             if (audio_extn_hfp_is_active(adev))
                 platform_set_echo_reference(adev, true, out_device);
@@ -2903,6 +2968,13 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
                        snd_device = SND_DEVICE_IN_VOICE_SPEAKER_DMIC;
                 }
             } else {
+#ifdef SEC_AUDIO_ENABLED
+                if (adev->sec_call_state & SEC_CALL_STATE_VOLTE_VOICE)
+                    snd_device = SND_DEVICE_IN_VOLTE_MAIN_MIC;
+                else if (adev->sec_phone_type == 1)
+                    snd_device = SND_DEVICE_IN_VOICE_CP2_MAIN_MIC;
+                else
+#endif
                 snd_device = SND_DEVICE_IN_VOICE_SPEAKER_MIC;
                 if (audio_extn_hfp_is_active(adev))
                     platform_set_echo_reference(adev, true, out_device);

@@ -3454,6 +3454,23 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
     if (status != 0)
         goto done;
 
+#ifdef SEC_AUDIO_ENABLED
+    ret = str_parms_get_int(parms, "CallState", &val);
+    if (ret >= 0) {
+        ALOGD("%s: CallState=%d", __func__, val);
+        adev->sec_call_state = val;
+    }
+
+    ret = str_parms_get_str(parms, "phone_type", value, sizeof(value));
+    if (ret >= 0) {
+        ALOGD("%s: phone_type=%s", __func__, value);
+        if (!strcmp(value, "cp2"))
+            adev->sec_phone_type = 1;
+        else
+            adev->sec_phone_type = 0;
+    }
+#endif
+
     status = platform_set_parameters(adev->platform, parms);
     if (status != 0)
         goto done;

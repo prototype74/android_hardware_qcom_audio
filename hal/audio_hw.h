@@ -354,6 +354,10 @@ struct audio_device {
     adm_request_focus_t adm_request_focus;
     adm_abandon_focus_t adm_abandon_focus;
     bool multi_offload_enable;
+#ifdef SEC_AUDIO_ENABLED
+    int sec_call_state; // Samsung CallState bitmask
+    int sec_phone_type; // 0=CP1 (SIM1), 1=CP2 (SIM2)
+#endif
 };
 
 int select_devices(struct audio_device *adev,
