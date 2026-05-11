@@ -3565,6 +3565,20 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         }
     }
 
+    ret = str_parms_get_str(parms, "extraVolume", value, sizeof(value));
+    if (ret >= 0) {
+        bool enabled = !strcmp(value, "true");
+        if (enabled != adev->sec_extra_volume) {
+            adev->sec_extra_volume = enabled;
+            ALOGD("%s: extraVolume=%s", __func__, value);
+            if (voice_is_in_call(adev)) {
+                select_devices(adev,
+                    get_usecase_id_from_usecase_type(adev, VOICE_CALL));
+                voice_set_volume(adev, adev->voice.volume);
+            }
+        }
+    }
+
     sec_factory_set_parameters(adev, parms);
 #endif
 
@@ -3667,6 +3681,9 @@ static char* adev_get_parameters(const struct audio_hw_device *dev,
     struct str_parms *reply = str_parms_create();
     struct str_parms *query = str_parms_create_str(keys);
     char *str;
+#ifdef SEC_AUDIO_ENABLED
+    char val[32];
+#endif
 
     if (!query || !reply) {
         if (reply) {
@@ -3683,6 +3700,11 @@ static char* adev_get_parameters(const struct audio_hw_device *dev,
     audio_extn_get_parameters(adev, query, reply);
     voice_get_parameters(adev, query, reply);
     platform_get_parameters(adev->platform, query, reply);
+#ifdef SEC_AUDIO_ENABLED
+    if (str_parms_get_str(query, "extraVolume", val, sizeof(val)) >= 0)
+        str_parms_add_str(reply, "extraVolume",
+                          adev->sec_extra_volume ? "true" : "false");
+#endif
     pthread_mutex_unlock(&adev->lock);
     str = str_parms_to_str(reply);
     str_parms_destroy(query);
