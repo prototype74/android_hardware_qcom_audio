@@ -357,6 +357,7 @@ struct audio_device {
 #ifdef SEC_AUDIO_ENABLED
     int sec_call_state; // Samsung CallState bitmask
     int sec_phone_type; // 0=CP1 (SIM1), 1=CP2 (SIM2)
+    int sec_wb_amr;     // WB_AMR_OFF/ON/SWB
     struct {
         int mode;
         int state;
@@ -389,6 +390,12 @@ enum sec_factory_out {
 #define LOOPBACK_DISABLE    0
 #define LOOPBACK_ENABLE     1
 #define LOOPBACK_NODELAY    2
+
+enum sec_wb_amr_mode {
+    WB_AMR_OFF = 0,
+    WB_AMR_ON = 1,
+    WB_AMR_SWB = 2,
+};
 #endif
 
 int select_devices(struct audio_device *adev,

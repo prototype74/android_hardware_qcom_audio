@@ -3548,6 +3548,23 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
             adev->sec_phone_type = 0;
     }
 
+    ret = str_parms_get_str(parms, "wb_amr", value, sizeof(value));
+    if (ret >= 0) {
+        int old = adev->sec_wb_amr;
+        if (!strcmp(value, "swb"))
+            adev->sec_wb_amr = WB_AMR_SWB;
+        else if (!strcmp(value, "on"))
+            adev->sec_wb_amr = WB_AMR_ON;
+        else
+            adev->sec_wb_amr = WB_AMR_OFF;
+        if (old != adev->sec_wb_amr) {
+            ALOGD("%s: wb_amr=%s (%d -> %d)", __func__, value, old, adev->sec_wb_amr);
+            if (voice_is_in_call(adev))
+                select_devices(adev,
+                    get_usecase_id_from_usecase_type(adev, VOICE_CALL));
+        }
+    }
+
     sec_factory_set_parameters(adev, parms);
 #endif
 
