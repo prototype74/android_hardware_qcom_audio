@@ -2501,6 +2501,14 @@ int platform_set_voice_volume(void *platform, int volume)
     // 100 -> 5, 80 -> 4, 60 -> 3, 40 -> 2, 20 -> 1  0 -> 0
     // But this values don't changed in kernel. So, below change is need.
     vol_index = (int)percent_to_index(volume, MIN_VOL_INDEX, MAX_VOL_INDEX);
+#ifdef SEC_AUDIO_ENABLED
+    /* Add this offset to Voice Rx Gain during ringback tone.
+     * The QDSP6 voice volume command accepts the raw value without
+     * range checking. The upper bits singal a ringback gain profile
+     * to the DSP, separate from the normal min-max step range */
+    if (adev->sec_ringbacktone)
+        vol_index += SEC_RINGBACKTONE_GAIN_OFFSET;
+#endif
     set_values[0] = vol_index;
 
     ctl = mixer_get_ctl_by_name(adev->mixer, mixer_ctl_name);

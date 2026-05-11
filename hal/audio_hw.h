@@ -359,6 +359,7 @@ struct audio_device {
     int sec_phone_type; // 0=CP1 (SIM1), 1=CP2 (SIM2)
     int sec_wb_amr;     // WB_AMR_OFF/ON/SWB
     bool sec_extra_volume;
+    bool sec_ringbacktone;
     struct {
         int mode;
         int state;

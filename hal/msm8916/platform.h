@@ -246,6 +246,10 @@ enum {
 #define DEFAULT_VOLUME_RAMP_DURATION_MS 20
 #define MIXER_PATH_MAX_LENGTH 100
 
+#ifdef SEC_AUDIO_ENABLED
+#define SEC_RINGBACKTONE_GAIN_OFFSET 0x200
+#endif
+
 #define MAX_VOL_INDEX 5
 #define MIN_VOL_INDEX 0
 #define percent_to_index(val, min, max) \

@@ -3579,6 +3579,14 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         }
     }
 
+    ret = str_parms_get_str(parms, "ringbacktone", value, sizeof(value));
+    if (ret >= 0) {
+        adev->sec_ringbacktone = !strcmp(value, "on");
+        ALOGD("%s: ringbacktone=%s", __func__, value);
+        if (voice_is_in_call(adev))
+            voice_set_volume(adev, adev->voice.volume);
+    }
+
     sec_factory_set_parameters(adev, parms);
 #endif
 
