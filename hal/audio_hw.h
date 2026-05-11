@@ -357,8 +357,39 @@ struct audio_device {
 #ifdef SEC_AUDIO_ENABLED
     int sec_call_state; // Samsung CallState bitmask
     int sec_phone_type; // 0=CP1 (SIM1), 1=CP2 (SIM2)
+    struct {
+        int mode;
+        int state;
+        int out_device;
+        int in_device;
+    } sec_factory;
 #endif
 };
+
+#ifdef SEC_AUDIO_ENABLED
+enum sec_factory_mode {
+    FACTORY_MODE_OFF = 0,
+    FACTORY_MODE_PCM = 1,
+    FACTORY_MODE_PACKET = 2,
+    FACTORY_MODE_CODEC = 3,
+    FACTORY_MODE_REALTIME = 4,
+    FACTORY_MODE_PACKET_NODELAY = 5,
+};
+
+#define FACTORY_STATE_ROUTE_ACTIVE  0x01
+#define FACTORY_STATE_LOOPBACK_ON   0x10
+
+enum sec_factory_out {
+    FACTORY_OUT_RCV = 1,
+    FACTORY_OUT_SPK = 2,
+    FACTORY_OUT_EAR = 4,
+};
+
+/* Kernel loopback modes (maps to VOICE_PARAM_LOOPBACK_ENABLE in q6voice) */
+#define LOOPBACK_DISABLE    0
+#define LOOPBACK_ENABLE     1
+#define LOOPBACK_NODELAY    2
+#endif
 
 int select_devices(struct audio_device *adev,
                           audio_usecase_t uc_id);

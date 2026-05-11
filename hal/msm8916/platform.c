@@ -505,10 +505,15 @@ static const char * const device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_OUT_VOICE_CP2_HANDSET] = "voice-call-cp2-handset",
     [SND_DEVICE_OUT_VOICE_CP2_SPEAKER] = "voice-call-cp2-speaker",
     [SND_DEVICE_OUT_VOICE_CP2_HEADPHONES] = "voice-call-cp2-headset",
+    [SND_DEVICE_OUT_LOOPBACK_HANDSET] = "loopback-handset",
+    [SND_DEVICE_OUT_LOOPBACK_SPEAKER] = "loopback-speaker",
+    [SND_DEVICE_OUT_LOOPBACK_HEADSET] = "loopback-headset",
     [SND_DEVICE_IN_VOLTE_MAIN_MIC] = "VoLTE-voice-main-mic",
     [SND_DEVICE_IN_VOLTE_HEADSET_MIC] = "VoLTE-voice-headset-mic",
     [SND_DEVICE_IN_VOICE_CP2_MAIN_MIC] = "voice-call-cp2-main-mic",
     [SND_DEVICE_IN_VOICE_CP2_HEADSET_MIC] = "voice-call-cp2-headset-mic",
+    [SND_DEVICE_IN_LOOPBACK_MAIN_MIC] = "loopback-main-mic",
+    [SND_DEVICE_IN_LOOPBACK_HEADSET_MIC] = "loopback-headset-mic",
 #endif
 };
 
@@ -2662,6 +2667,18 @@ snd_device_t platform_get_output_snd_device(void *platform, struct stream_out *o
 
     if ((mode == AUDIO_MODE_IN_CALL) ||
         voice_extn_compress_voip_is_active(adev)) {
+#ifdef SEC_AUDIO_ENABLED
+        if (adev->sec_factory.state & (FACTORY_STATE_LOOPBACK_ON | FACTORY_STATE_ROUTE_ACTIVE)) {
+            if (adev->sec_factory.out_device == FACTORY_OUT_RCV)
+                snd_device = SND_DEVICE_OUT_LOOPBACK_HANDSET;
+            else if (adev->sec_factory.out_device == FACTORY_OUT_SPK)
+                snd_device = SND_DEVICE_OUT_LOOPBACK_SPEAKER;
+            else if (adev->sec_factory.out_device == FACTORY_OUT_EAR)
+                snd_device = SND_DEVICE_OUT_LOOPBACK_HEADSET;
+            if (snd_device != SND_DEVICE_NONE)
+                goto exit;
+        }
+#endif
         if (devices & AUDIO_DEVICE_OUT_WIRED_HEADPHONE ||
             devices & AUDIO_DEVICE_OUT_WIRED_HEADSET ||
             devices & AUDIO_DEVICE_OUT_LINE) {
@@ -2755,7 +2772,18 @@ snd_device_t platform_get_output_snd_device(void *platform, struct stream_out *o
             goto exit;
         }
     }
-
+#ifdef SEC_AUDIO_ENABLED
+    if (adev->sec_factory.state & FACTORY_STATE_ROUTE_ACTIVE) {
+        if (adev->sec_factory.out_device == FACTORY_OUT_RCV)
+            snd_device = SND_DEVICE_OUT_LOOPBACK_HANDSET;
+        else if (adev->sec_factory.out_device == FACTORY_OUT_SPK)
+            snd_device = SND_DEVICE_OUT_LOOPBACK_SPEAKER;
+        else if (adev->sec_factory.out_device == FACTORY_OUT_EAR)
+            snd_device = SND_DEVICE_OUT_LOOPBACK_HEADSET;
+        if (snd_device != SND_DEVICE_NONE)
+            goto exit;
+    }
+#endif
     if (devices & AUDIO_DEVICE_OUT_WIRED_HEADPHONE ||
         devices & AUDIO_DEVICE_OUT_WIRED_HEADSET) {
         if (OUTPUT_SAMPLING_RATE_44100 == sample_rate &&
@@ -2875,6 +2903,16 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
 
     if ((out_device != AUDIO_DEVICE_NONE) && ((mode == AUDIO_MODE_IN_CALL) ||
         voice_extn_compress_voip_is_active(adev) || audio_extn_hfp_is_active(adev))) {
+#ifdef SEC_AUDIO_ENABLED
+        if (adev->sec_factory.state & FACTORY_STATE_LOOPBACK_ON) {
+            if (out_device & (AUDIO_DEVICE_OUT_WIRED_HEADPHONE |
+                              AUDIO_DEVICE_OUT_WIRED_HEADSET))
+                snd_device = SND_DEVICE_IN_LOOPBACK_HEADSET_MIC;
+            else
+                snd_device = SND_DEVICE_IN_LOOPBACK_MAIN_MIC;
+            goto exit;
+        }
+#endif
         if ((adev->voice.tty_mode != TTY_MODE_OFF) &&
             !voice_extn_compress_voip_is_active(adev)) {
             if (out_device & AUDIO_DEVICE_OUT_WIRED_HEADPHONE ||

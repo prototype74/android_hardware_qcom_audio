@@ -3434,6 +3434,84 @@ static void adev_close_output_stream(struct audio_hw_device *dev __unused,
     ALOGV("%s: exit", __func__);
 }
 
+#ifdef SEC_AUDIO_ENABLED
+static void sec_factory_set_parameters(struct audio_device *adev,
+                                       struct str_parms *parms)
+{
+    char value[32];
+    int ret;
+
+    ret = str_parms_get_str(parms, "factory_test_type", value, sizeof(value));
+    if (ret >= 0) {
+        if (!strcmp(value, "pcm"))
+            adev->sec_factory.mode = FACTORY_MODE_PCM;
+        else if (!strcmp(value, "packet"))
+            adev->sec_factory.mode = FACTORY_MODE_PACKET;
+        else if (!strcmp(value, "codec"))
+            adev->sec_factory.mode = FACTORY_MODE_CODEC;
+        else if (!strcmp(value, "realtime"))
+            adev->sec_factory.mode = FACTORY_MODE_REALTIME;
+        else if (!strcmp(value, "packet_nodelay"))
+            adev->sec_factory.mode = FACTORY_MODE_PACKET_NODELAY;
+        ALOGD("%s: factory_test_type=%d", __func__, adev->sec_factory.mode);
+    }
+
+    ret = str_parms_get_str(parms, "factory_test_loopback", value, sizeof(value));
+    if (ret >= 0) {
+        if (!strcmp(value, "on")) {
+            ALOGD("%s: factory loopback ON", __func__);
+            adev->sec_factory.state |= FACTORY_STATE_LOOPBACK_ON;
+        } else if (!strcmp(value, "off")) {
+            ALOGD("%s: factory loopback OFF", __func__);
+            voice_stop_call(adev);
+            adev->sec_factory.mode = FACTORY_MODE_OFF;
+            adev->sec_factory.state &= ~FACTORY_STATE_LOOPBACK_ON;
+            adev->sec_factory.out_device = 0;
+            adev->sec_factory.in_device = 0;
+        }
+    }
+
+    ret = str_parms_get_str(parms, "factory_test_path", value, sizeof(value));
+    if (ret >= 0) {
+        if (!strcmp(value, "mic_rcv")) {
+            adev->sec_factory.out_device = FACTORY_OUT_RCV;
+            adev->sec_factory.in_device = AUDIO_DEVICE_IN_BUILTIN_MIC;
+        } else if (!strcmp(value, "mic_spk") || !strcmp(value, "mic1_spk")) {
+            adev->sec_factory.out_device = FACTORY_OUT_SPK;
+            adev->sec_factory.in_device = AUDIO_DEVICE_IN_BUILTIN_MIC;
+        } else if (!strcmp(value, "mic_ear")) {
+            adev->sec_factory.out_device = FACTORY_OUT_EAR;
+            adev->sec_factory.in_device = AUDIO_DEVICE_IN_BUILTIN_MIC;
+        }
+        ALOGD("%s: factory_test_path=%s out=%d in=%#x", __func__, value,
+              adev->sec_factory.out_device, adev->sec_factory.in_device);
+        voice_stop_call(adev);
+        voice_start_call(adev);
+    }
+
+    ret = str_parms_get_str(parms, "factory_test_route", value, sizeof(value));
+    if (ret >= 0) {
+        if (!strcmp(value, "rcv")) {
+            adev->sec_factory.state |= FACTORY_STATE_ROUTE_ACTIVE;
+            adev->sec_factory.out_device = FACTORY_OUT_RCV;
+        } else if (!strcmp(value, "spk")) {
+            adev->sec_factory.state |= FACTORY_STATE_ROUTE_ACTIVE;
+            adev->sec_factory.out_device = FACTORY_OUT_SPK;
+        } else if (!strcmp(value, "ear")) {
+            adev->sec_factory.state |= FACTORY_STATE_ROUTE_ACTIVE;
+            adev->sec_factory.out_device = FACTORY_OUT_EAR;
+        } else if (!strcmp(value, "off")) {
+            adev->sec_factory.state &= ~FACTORY_STATE_ROUTE_ACTIVE;
+            adev->sec_factory.out_device = 0;
+        }
+        ALOGD("%s: factory_test_route=%s", __func__, value);
+        /* Re-route active playback to use loopback path */
+        if (adev->primary_output && !adev->primary_output->standby)
+            select_devices(adev, adev->primary_output->usecase);
+    }
+}
+#endif
+
 static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 {
     struct audio_device *adev = (struct audio_device *)dev;
@@ -3469,6 +3547,8 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         else
             adev->sec_phone_type = 0;
     }
+
+    sec_factory_set_parameters(adev, parms);
 #endif
 
     status = platform_set_parameters(adev->platform, parms);

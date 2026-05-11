@@ -117,6 +117,16 @@ int voice_stop_usecase(struct audio_device *adev, audio_usecase_t usecase_id)
 
     ALOGD("%s: enter usecase:%s", __func__, use_case_table[usecase_id]);
 
+#ifdef SEC_AUDIO_ENABLED
+    if (adev->sec_factory.mode == FACTORY_MODE_PACKET_NODELAY ||
+        adev->sec_factory.mode == FACTORY_MODE_PACKET) {
+        struct mixer_ctl *ctl = mixer_get_ctl_by_name(adev->mixer, "Loopback Enable");
+        if (ctl)
+            mixer_ctl_set_value(ctl, 0, LOOPBACK_DISABLE);
+        ALOGD("%s: Loopback disabled", __func__);
+    }
+#endif
+
     session = (struct voice_session *)voice_get_session_from_use_case(adev, usecase_id);
     if (!session) {
         ALOGE("stop_call: couldn't find voice session");
@@ -198,6 +208,24 @@ int voice_start_usecase(struct audio_device *adev, audio_usecase_t usecase_id)
 
     pcm_dev_rx_id = platform_get_pcm_device_id(uc_info->id, PCM_PLAYBACK);
     pcm_dev_tx_id = platform_get_pcm_device_id(uc_info->id, PCM_CAPTURE);
+
+#ifdef SEC_AUDIO_ENABLED
+    if (adev->sec_factory.mode == FACTORY_MODE_PACKET_NODELAY ||
+        adev->sec_factory.mode == FACTORY_MODE_PACKET) {
+        struct mixer_ctl *ctl;
+        int lb_val = (adev->sec_factory.mode == FACTORY_MODE_PACKET_NODELAY)
+                     ? LOOPBACK_NODELAY : LOOPBACK_ENABLE;
+
+        ctl = mixer_get_ctl_by_name(adev->mixer, "Loopback Enable");
+        if (ctl)
+            mixer_ctl_set_value(ctl, 0, lb_val);
+        ALOGD("%s: Loopback Enable=%d", __func__, lb_val);
+
+        pcm_dev_rx_id = LOOPBACK_PCM_DEVICE;
+        pcm_dev_tx_id = LOOPBACK_PCM_DEVICE;
+        voice_config = pcm_config_voice_call;
+    }
+#endif
 
     if (pcm_dev_rx_id < 0 || pcm_dev_tx_id < 0) {
         ALOGE("%s: Invalid PCM devices (rx: %d tx: %d) for the usecase(%d)",
