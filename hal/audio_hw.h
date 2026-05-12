@@ -399,6 +399,9 @@ enum sec_wb_amr_mode {
     WB_AMR_ON = 1,
     WB_AMR_SWB = 2,
 };
+
+// Adapt sound: mode, select, 12 EQ bands
+#define SEC_DHA_NUM_PARAMS 14
 #endif
 
 int select_devices(struct audio_device *adev,

@@ -3435,6 +3435,30 @@ static void adev_close_output_stream(struct audio_hw_device *dev __unused,
 }
 
 #ifdef SEC_AUDIO_ENABLED
+static void sec_set_dha_data(struct audio_device *adev, const char *csv)
+{
+    struct mixer_ctl *ctl;
+    int dha[SEC_DHA_NUM_PARAMS] = {0};
+    char buf[64];
+    char *token, *saveptr;
+    int i = 0;
+
+    // Parse the csv array of 14 digits
+    strlcpy(buf, csv, sizeof(buf));
+    token = strtok_r(buf, ",", &saveptr);
+    while (token && i < SEC_DHA_NUM_PARAMS) {
+        dha[i++] = atoi(token);
+        token = strtok_r(NULL, ",", &saveptr);
+    }
+
+    ctl = mixer_get_ctl_by_name(adev->mixer, "Sec Set DHA data");
+    if (!ctl) {
+        ALOGE("%s: Could not get ctl for Sec Set DHA data", __func__);
+        return;
+    }
+    mixer_ctl_set_array(ctl, dha, SEC_DHA_NUM_PARAMS);
+}
+
 static void sec_factory_set_parameters(struct audio_device *adev,
                                        struct str_parms *parms)
 {
@@ -3605,6 +3629,13 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
             if (!adev->voice.mic_mute)
                 platform_set_mic_mute(adev->platform, mute);
         }
+    }
+
+    ret = str_parms_get_str(parms, "dha", value, sizeof(value));
+    if (ret >= 0) {
+        ALOGD("%s: dha=%s", __func__, value);
+        if (adev->mode == AUDIO_MODE_IN_CALL)
+            sec_set_dha_data(adev, value);
     }
 
     sec_factory_set_parameters(adev, parms);
