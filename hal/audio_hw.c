@@ -3603,6 +3603,20 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         }
     }
 
+    ret = str_parms_get_str(parms, "HACSetting", value, sizeof(value));
+    if (ret >= 0) {
+        bool enabled = !strcmp(value, "ON");
+        if (enabled != adev->sec_hac) {
+            adev->sec_hac = enabled;
+            ALOGD("%s: HACSetting=%s", __func__, value);
+            if (voice_is_in_call(adev)) {
+                select_devices(adev,
+                    get_usecase_id_from_usecase_type(adev, VOICE_CALL));
+                voice_set_volume(adev, adev->voice.volume);
+            }
+        }
+    }
+
     ret = str_parms_get_str(parms, "ringbacktone", value, sizeof(value));
     if (ret >= 0) {
         adev->sec_ringbacktone = !strcmp(value, "on");

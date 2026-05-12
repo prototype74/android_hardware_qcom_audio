@@ -361,6 +361,7 @@ struct audio_device {
     bool sec_extra_volume;
     bool sec_ringbacktone;
     bool sec_allsoundmute;
+    bool sec_hac;
     struct {
         int mode;
         int state;
