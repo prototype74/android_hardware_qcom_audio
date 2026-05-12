@@ -306,6 +306,39 @@ void audio_extn_fm_set_parameters(struct audio_device *adev,
         fm_set_volume(adev, fmmod.fm_volume, false);
     }
 
+#ifdef SEC_AUDIO_ENABLED
+    // Samsung FM Radio uses different parameter keys
+    ret = str_parms_get_str(parms, "fm_radio_volume", value, sizeof(value));
+    if (ret >= 0) {
+        if (!strncmp(value, "on", 2)) {
+            if (!fmmod.is_fm_running) {
+                fm_start(adev);
+            }
+        } else {
+            if (fmmod.is_fm_running) {
+                fm_set_volume(adev, 0, false);
+                usleep(FM_LOOPBACK_DRAIN_TIME_MS*1000);
+                fm_stop(adev);
+            }
+        }
+    }
+
+    ret = str_parms_get_str(parms, "FMRadioVol", value, sizeof(value));
+    if (ret >= 0) {
+        if (sscanf(value, "%f", &vol) == 1) {
+            ALOGD("%s: FMRadioVol=%f", __func__, vol);
+            fm_set_volume(adev, vol, true);
+        }
+    }
+
+    ret = str_parms_get_int(parms, "fm_radio_mute", &val);
+    if (ret >= 0) {
+        ALOGD("%s: fm_radio_mute=%d", __func__, val);
+        fmmod.is_fm_muted = (val != 0);
+        fm_set_volume(adev, fmmod.fm_volume, false);
+    }
+#endif
+
 #ifdef RECORD_PLAY_CONCURRENCY
     ret = str_parms_get_str(parms, AUDIO_PARAMETER_KEY_REC_PLAY_CONC,
                                value, sizeof(value));
