@@ -360,6 +360,7 @@ struct audio_device {
     int sec_wb_amr;     // WB_AMR_OFF/ON/SWB
     bool sec_extra_volume;
     bool sec_ringbacktone;
+    bool sec_allsoundmute;
     struct {
         int mode;
         int state;

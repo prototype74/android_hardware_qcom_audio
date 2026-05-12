@@ -274,6 +274,11 @@ int voice_start_usecase(struct audio_device *adev, audio_usecase_t usecase_id)
 
     voice_set_volume(adev, adev->voice.volume);
 
+#ifdef SEC_AUDIO_ENABLED
+    if (adev->sec_allsoundmute)
+        platform_set_device_mute(adev->platform, true, "rx");
+#endif
+
     ret = platform_start_voice_call(adev->platform, session->vsid);
     if (ret < 0) {
         ALOGE("%s: platform_start_voice_call error %d\n", __func__, ret);

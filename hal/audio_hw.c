@@ -3587,6 +3587,14 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
             voice_set_volume(adev, adev->voice.volume);
     }
 
+    ret = str_parms_get_int(parms, "allsoundmute", &val);
+    if (ret >= 0) {
+        adev->sec_allsoundmute = (val != 0);
+        ALOGD("%s: allsoundmute=%d", __func__, val);
+        if (adev->mode == AUDIO_MODE_IN_CALL)
+            platform_set_device_mute(adev->platform, adev->sec_allsoundmute, "rx");
+    }
+
     sec_factory_set_parameters(adev, parms);
 #endif
 
