@@ -3595,6 +3595,18 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
             platform_set_device_mute(adev->platform, adev->sec_allsoundmute, "rx");
     }
 
+    ret = str_parms_get_str(parms, "tx_mute_for_shutterSound", value, sizeof(value));
+    if (ret >= 0) {
+        bool mute = !strcmp(value, "true");
+        ALOGD("%s: tx_mute_for_shutterSound=%s", __func__, value);
+        if (adev->mode == AUDIO_MODE_IN_CALL) {
+            if (!adev->sec_allsoundmute)
+                platform_set_device_mute(adev->platform, mute, "rx");
+            if (!adev->voice.mic_mute)
+                platform_set_mic_mute(adev->platform, mute);
+        }
+    }
+
     sec_factory_set_parameters(adev, parms);
 #endif
 
