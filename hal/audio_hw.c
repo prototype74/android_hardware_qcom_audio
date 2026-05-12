@@ -3435,6 +3435,45 @@ static void adev_close_output_stream(struct audio_hw_device *dev __unused,
 }
 
 #ifdef SEC_AUDIO_ENABLED
+static void sec_set_call_forwarding(struct audio_device *adev, bool enable)
+{
+    struct mixer_ctl *ctl;
+
+    ALOGD("%s: %d", __func__, enable);
+
+    if (enable) {
+        /* Route voice downlink to MultiMedia1 for recording */
+        ctl = mixer_get_ctl_by_name(adev->mixer, "MultiMedia1 Mixer VOC_REC_DL");
+        if (ctl)
+            mixer_ctl_set_value(ctl, 0, 1);
+        else
+            ALOGE("%s: Failed to get MultiMedia1 Mixer VOC_REC_DL", __func__);
+
+        ctl = mixer_get_ctl_by_name(adev->mixer, "Incall_Music Audio Mixer MultiMedia1");
+        if (ctl)
+            mixer_ctl_set_value(ctl, 0, 1);
+        else
+            ALOGE("%s: Failed to get Incall_Music Audio Mixer MultiMedia1", __func__);
+    } else {
+        /* Disable voice downlink recording */
+        ctl = mixer_get_ctl_by_name(adev->mixer, "MultiMedia1 Mixer VOC_REC_DL");
+        if (ctl)
+            mixer_ctl_set_value(ctl, 0, 0);
+
+        ctl = mixer_get_ctl_by_name(adev->mixer, "Incall_Music Audio Mixer MultiMedia1");
+        if (ctl)
+            mixer_ctl_set_value(ctl, 0, 0);
+    }
+
+    /* Re-route all active usecases */
+    struct listnode *node;
+    struct audio_usecase *usecase;
+    list_for_each(node, &adev->usecase_list) {
+        usecase = node_to_item(node, struct audio_usecase, list);
+        select_devices(adev, usecase->id);
+    }
+}
+
 static void sec_set_dha_data(struct audio_device *adev, const char *csv)
 {
     struct mixer_ctl *ctl;
@@ -3650,6 +3689,13 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         ALOGD("%s: dha=%s", __func__, value);
         if (adev->mode == AUDIO_MODE_IN_CALL)
             sec_set_dha_data(adev, value);
+    }
+
+    ret = str_parms_get_str(parms, "call_forwarding", value, sizeof(value));
+    if (ret >= 0) {
+        bool enable = !strcmp(value, "on");
+        ALOGD("%s: call_forwarding=%s", __func__, value);
+        sec_set_call_forwarding(adev, enable);
     }
 
     sec_factory_set_parameters(adev, parms);
