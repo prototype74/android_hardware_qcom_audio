@@ -3604,13 +3604,13 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 #ifdef SEC_AUDIO_ENABLED
     ret = str_parms_get_int(parms, "CallState", &val);
     if (ret >= 0) {
-        ALOGD("%s: CallState=%d", __func__, val);
+        ALOGI("%s: CallState=%d", __func__, val);
         adev->sec_call_state = val;
     }
 
     ret = str_parms_get_str(parms, "phone_type", value, sizeof(value));
     if (ret >= 0) {
-        ALOGD("%s: phone_type=%s", __func__, value);
+        ALOGV("%s: phone_type=%s", __func__, value);
         if (!strcmp(value, "cp2"))
             adev->sec_phone_type = 1;
         else
@@ -3627,7 +3627,9 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         else
             adev->sec_wb_amr = WB_AMR_OFF;
         if (old != adev->sec_wb_amr) {
+#ifdef SEC_AUDIO_DEBUG
             ALOGD("%s: wb_amr=%s (%d -> %d)", __func__, value, old, adev->sec_wb_amr);
+#endif
             if (voice_is_in_call(adev))
                 select_devices(adev,
                     get_usecase_id_from_usecase_type(adev, VOICE_CALL));
@@ -3639,7 +3641,7 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         bool enabled = !strcmp(value, "true");
         if (enabled != adev->sec_extra_volume) {
             adev->sec_extra_volume = enabled;
-            ALOGD("%s: extraVolume=%s", __func__, value);
+            ALOGV("%s: extraVolume=%s", __func__, value);
             if (voice_is_in_call(adev)) {
                 select_devices(adev,
                     get_usecase_id_from_usecase_type(adev, VOICE_CALL));
@@ -3653,7 +3655,9 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         bool enabled = !strcmp(value, "ON");
         if (enabled != adev->sec_hac) {
             adev->sec_hac = enabled;
+#ifdef SEC_AUDIO_DEBUG
             ALOGD("%s: HACSetting=%s", __func__, value);
+#endif
             if (voice_is_in_call(adev)) {
                 select_devices(adev,
                     get_usecase_id_from_usecase_type(adev, VOICE_CALL));
@@ -3665,7 +3669,9 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
     ret = str_parms_get_str(parms, "ringbacktone", value, sizeof(value));
     if (ret >= 0) {
         adev->sec_ringbacktone = !strcmp(value, "on");
+#ifdef SEC_AUDIO_DEBUG
         ALOGD("%s: ringbacktone=%s", __func__, value);
+#endif
         if (voice_is_in_call(adev))
             voice_set_volume(adev, adev->voice.volume);
     }
@@ -3673,7 +3679,7 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
     ret = str_parms_get_int(parms, "allsoundmute", &val);
     if (ret >= 0) {
         adev->sec_allsoundmute = (val != 0);
-        ALOGD("%s: allsoundmute=%d", __func__, val);
+        ALOGI("%s: allsoundmute=%d", __func__, val);
         if (adev->mode == AUDIO_MODE_IN_CALL)
             platform_set_device_mute(adev->platform, adev->sec_allsoundmute, "rx");
     }
@@ -3681,7 +3687,7 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
     ret = str_parms_get_str(parms, "tx_mute_for_shutterSound", value, sizeof(value));
     if (ret >= 0) {
         bool mute = !strcmp(value, "true");
-        ALOGD("%s: tx_mute_for_shutterSound=%s", __func__, value);
+        ALOGV("%s: tx_mute_for_shutterSound=%s", __func__, value);
         if (adev->mode == AUDIO_MODE_IN_CALL) {
             if (!adev->sec_allsoundmute)
                 platform_set_device_mute(adev->platform, mute, "rx");
@@ -3692,7 +3698,9 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 
     ret = str_parms_get_str(parms, "dha", value, sizeof(value));
     if (ret >= 0) {
+#ifdef SEC_AUDIO_DEBUG
         ALOGD("%s: dha=%s", __func__, value);
+#endif
         if (adev->mode == AUDIO_MODE_IN_CALL)
             sec_set_dha_data(adev, value);
     }
@@ -3704,7 +3712,9 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
             struct mixer_ctl *ctl = mixer_get_ctl_by_name(adev->mixer, "VSP data");
             if (ctl) {
                 mixer_ctl_set_value(ctl, 0, val);
+#ifdef SEC_AUDIO_DEBUG
                 ALOGD("%s: VSP data=%d", __func__, val);
+#endif
             }
         }
     }
@@ -3716,7 +3726,9 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
             struct mixer_ctl *ctl = mixer_get_ctl_by_name(adev->mixer, "LRSM data");
             if (ctl) {
                 mixer_ctl_set_array(ctl, adev->sec_lrsm, 2);
+#ifdef SEC_AUDIO_DEBUG
                 ALOGD("%s: LRSM data=%d,%d", __func__, adev->sec_lrsm[0], adev->sec_lrsm[1]);
+#endif
             }
         }
     }
@@ -3728,7 +3740,9 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
             struct mixer_ctl *ctl = mixer_get_ctl_by_name(adev->mixer, "LRSM data");
             if (ctl) {
                 mixer_ctl_set_array(ctl, adev->sec_lrsm, 2);
+#ifdef SEC_AUDIO_DEBUG
                 ALOGD("%s: LRSM data=%d,%d", __func__, adev->sec_lrsm[0], adev->sec_lrsm[1]);
+#endif
             }
         }
     }
@@ -3736,7 +3750,7 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
     ret = str_parms_get_str(parms, "call_forwarding", value, sizeof(value));
     if (ret >= 0) {
         bool enable = !strcmp(value, "on");
-        ALOGD("%s: call_forwarding=%s", __func__, value);
+        ALOGV("%s: call_forwarding=%s", __func__, value);
         sec_set_call_forwarding(adev, enable);
     }
 
@@ -3804,8 +3818,10 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
     if (ret >= 0 && val != adev->bt_samplerate) {
         adev->bt_samplerate = val;
         adev->bt_wb_speech_enabled = (val == 16000);
+#ifdef SEC_AUDIO_DEBUG
         ALOGD("%s: bt_samplerate=%d, bt_wb_speech_enabled=%d", __func__, val,
               adev->bt_wb_speech_enabled);
+#endif
         if (voice_is_in_call(adev)) {
             voice_stop_call(adev);
             voice_start_call(adev);
