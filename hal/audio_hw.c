@@ -1526,6 +1526,9 @@ static int stop_output_stream(struct stream_out *out)
 
     if (is_offload_usecase(out->usecase) &&
         !(audio_extn_dolby_is_passthrough_stream(out->flags))) {
+#ifdef SEC_AUDIO_ENABLED
+        adev->sec_offload_active = false;
+#endif
         if (adev->visualizer_stop_output != NULL)
             adev->visualizer_stop_output(out->handle, out->pcm_device_id);
 
@@ -2361,6 +2364,9 @@ static ssize_t out_write(struct audio_stream_out *stream, const void *buffer,
             audio_extn_dts_eagle_fade(adev, true, out);
             out->playback_started = 1;
             out->offload_state = OFFLOAD_STATE_PLAYING;
+#ifdef SEC_AUDIO_ENABLED
+            adev->sec_offload_active = true;
+#endif
 
             audio_extn_dts_notify_playback_state(out->usecase, 0, out->sample_rate,
                                                      popcount(out->channel_mask),
@@ -3689,6 +3695,42 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         ALOGD("%s: dha=%s", __func__, value);
         if (adev->mode == AUDIO_MODE_IN_CALL)
             sec_set_dha_data(adev, value);
+    }
+
+    ret = str_parms_get_int(parms, "VSPParam", &val);
+    if (ret >= 0) {
+        adev->sec_vsp_value = val;
+        if (adev->sec_offload_active) {
+            struct mixer_ctl *ctl = mixer_get_ctl_by_name(adev->mixer, "VSP data");
+            if (ctl) {
+                mixer_ctl_set_value(ctl, 0, val);
+                ALOGD("%s: VSP data=%d", __func__, val);
+            }
+        }
+    }
+
+    ret = str_parms_get_int(parms, "sound_balance", &val);
+    if (ret >= 0) {
+        adev->sec_lrsm[1] = val - 50;
+        if (adev->sec_offload_active) {
+            struct mixer_ctl *ctl = mixer_get_ctl_by_name(adev->mixer, "LRSM data");
+            if (ctl) {
+                mixer_ctl_set_array(ctl, adev->sec_lrsm, 2);
+                ALOGD("%s: LRSM data=%d,%d", __func__, adev->sec_lrsm[0], adev->sec_lrsm[1]);
+            }
+        }
+    }
+
+    ret = str_parms_get_int(parms, "toMono", &val);
+    if (ret >= 0) {
+        adev->sec_lrsm[0] = val;
+        if (adev->sec_offload_active) {
+            struct mixer_ctl *ctl = mixer_get_ctl_by_name(adev->mixer, "LRSM data");
+            if (ctl) {
+                mixer_ctl_set_array(ctl, adev->sec_lrsm, 2);
+                ALOGD("%s: LRSM data=%d,%d", __func__, adev->sec_lrsm[0], adev->sec_lrsm[1]);
+            }
+        }
     }
 
     ret = str_parms_get_str(parms, "call_forwarding", value, sizeof(value));

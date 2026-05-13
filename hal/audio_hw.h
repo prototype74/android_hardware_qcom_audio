@@ -362,6 +362,9 @@ struct audio_device {
     bool sec_ringbacktone;
     bool sec_allsoundmute;
     bool sec_hac;
+    bool sec_offload_active;
+    int sec_vsp_value;
+    int sec_lrsm[2]; // [0]=toMono, [1]=sound_balance-50
     struct {
         int mode;
         int state;
