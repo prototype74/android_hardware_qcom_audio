@@ -3799,6 +3799,19 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         }
     }
 
+#ifdef SEC_AUDIO_ENABLED
+    ret = str_parms_get_int(parms, "bt_samplerate", &val);
+    if (ret >= 0 && val != adev->bt_samplerate) {
+        adev->bt_samplerate = val;
+        adev->bt_wb_speech_enabled = (val == 16000);
+        ALOGD("%s: bt_samplerate=%d, bt_wb_speech_enabled=%d", __func__, val,
+              adev->bt_wb_speech_enabled);
+        if (voice_is_in_call(adev)) {
+            voice_stop_call(adev);
+            voice_start_call(adev);
+        }
+    }
+#else
     ret = str_parms_get_str(parms, AUDIO_PARAMETER_KEY_BT_SCO_WB, value, sizeof(value));
     if (ret >= 0) {
         if (strcmp(value, AUDIO_PARAMETER_VALUE_ON) == 0)
@@ -3806,6 +3819,7 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         else
             adev->bt_wb_speech_enabled = false;
     }
+#endif
 
     ret = str_parms_get_str(parms, AUDIO_PARAMETER_DEVICE_CONNECT, value, sizeof(value));
     if (ret >= 0) {
@@ -4392,6 +4406,9 @@ static int adev_open(const hw_module_t *module, const char *name,
     }
 
     adev->bt_wb_speech_enabled = false;
+#ifdef SEC_AUDIO_ENABLED
+    adev->bt_samplerate = 0;
+#endif
 
     audio_extn_ds2_enable(adev);
     *device = &adev->device.common;
