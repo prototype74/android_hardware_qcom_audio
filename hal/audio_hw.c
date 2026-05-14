@@ -2109,6 +2109,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
         audio_extn_set_parameters(adev, parms);
         pthread_mutex_unlock(&adev->lock);
     }
+
     if (is_offload_usecase(out->usecase)) {
         lock_output_stream(out);
         parse_compress_metadata(out, parms);

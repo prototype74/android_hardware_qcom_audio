@@ -505,6 +505,12 @@ static const char * const device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_OUT_VOICE_CP2_HANDSET] = "voice-call-cp2-handset",
     [SND_DEVICE_OUT_VOICE_CP2_SPEAKER] = "voice-call-cp2-speaker",
     [SND_DEVICE_OUT_VOICE_CP2_HEADPHONES] = "voice-call-cp2-headset",
+    [SND_DEVICE_OUT_VOICE_HANDSET_EXTRA_VOL] = "voice-call-handset-extra-vol",
+    [SND_DEVICE_OUT_VOICE_SPEAKER_EXTRA_VOL] = "voice-call-speaker-extra-vol",
+    [SND_DEVICE_OUT_VOLTE_HANDSET_EXTRA_VOL] = "VoLTE-voice-handset-extra-vol",
+    [SND_DEVICE_OUT_VOLTE_SPEAKER_EXTRA_VOL] = "VoLTE-voice-speaker-extra-vol",
+    [SND_DEVICE_OUT_VOICE_CP2_HANDSET_EXTRA_VOL] = "voice-call-cp2-handset-extra-vol",
+    [SND_DEVICE_OUT_VOICE_CP2_SPEAKER_EXTRA_VOL] = "voice-call-cp2-speaker-extra-vol",
     [SND_DEVICE_OUT_LOOPBACK_HANDSET] = "loopback-handset",
     [SND_DEVICE_OUT_LOOPBACK_SPEAKER] = "loopback-speaker",
     [SND_DEVICE_OUT_LOOPBACK_HEADSET] = "loopback-headset",
@@ -647,6 +653,12 @@ static int acdb_device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_OUT_VOICE_CP2_HANDSET] = 7,
     [SND_DEVICE_OUT_VOICE_CP2_SPEAKER] = 14,
     [SND_DEVICE_OUT_VOICE_CP2_HEADPHONES] = 10,
+    [SND_DEVICE_OUT_VOICE_HANDSET_EXTRA_VOL] = 7,
+    [SND_DEVICE_OUT_VOICE_SPEAKER_EXTRA_VOL] = 14,
+    [SND_DEVICE_OUT_VOLTE_HANDSET_EXTRA_VOL] = 7,
+    [SND_DEVICE_OUT_VOLTE_SPEAKER_EXTRA_VOL] = 14,
+    [SND_DEVICE_OUT_VOICE_CP2_HANDSET_EXTRA_VOL] = 7,
+    [SND_DEVICE_OUT_VOICE_CP2_SPEAKER_EXTRA_VOL] = 14,
     [SND_DEVICE_IN_VOLTE_MAIN_MIC] = 4,
     [SND_DEVICE_IN_VOLTE_HEADSET_MIC] = 8,
     [SND_DEVICE_IN_VOICE_CP2_MAIN_MIC] = 4,
@@ -2744,11 +2756,14 @@ snd_device_t platform_get_output_snd_device(void *platform, struct stream_out *o
 #ifdef SEC_AUDIO_ENABLED
                     {
                         if (adev->sec_call_state & SEC_CALL_STATE_VOLTE_VOICE)
-                            snd_device = SND_DEVICE_OUT_VOLTE_SPEAKER;
+                            snd_device = adev->sec_extra_volume ?
+                                SND_DEVICE_OUT_VOLTE_SPEAKER_EXTRA_VOL : SND_DEVICE_OUT_VOLTE_SPEAKER;
                         else if (adev->sec_phone_type == 1)
-                            snd_device = SND_DEVICE_OUT_VOICE_CP2_SPEAKER;
+                            snd_device = adev->sec_extra_volume ?
+                                SND_DEVICE_OUT_VOICE_CP2_SPEAKER_EXTRA_VOL : SND_DEVICE_OUT_VOICE_CP2_SPEAKER;
                         else
-                            snd_device = SND_DEVICE_OUT_VOICE_SPEAKER;
+                            snd_device = adev->sec_extra_volume ?
+                                SND_DEVICE_OUT_VOICE_SPEAKER_EXTRA_VOL : SND_DEVICE_OUT_VOICE_SPEAKER;
                     }
 #else
                         snd_device = SND_DEVICE_OUT_VOICE_SPEAKER;
@@ -2767,12 +2782,17 @@ snd_device_t platform_get_output_snd_device(void *platform, struct stream_out *o
             else
 #ifdef SEC_AUDIO_ENABLED
             if (adev->sec_call_state & SEC_CALL_STATE_VOLTE_VOICE)
-                snd_device = SND_DEVICE_OUT_VOLTE_HANDSET;
+                snd_device = adev->sec_extra_volume ?
+                    SND_DEVICE_OUT_VOLTE_HANDSET_EXTRA_VOL : SND_DEVICE_OUT_VOLTE_HANDSET;
             else if (adev->sec_phone_type == 1)
-                snd_device = SND_DEVICE_OUT_VOICE_CP2_HANDSET;
+                snd_device = adev->sec_extra_volume ?
+                    SND_DEVICE_OUT_VOICE_CP2_HANDSET_EXTRA_VOL : SND_DEVICE_OUT_VOICE_CP2_HANDSET;
             else
-#endif
+                snd_device = adev->sec_extra_volume ?
+                    SND_DEVICE_OUT_VOICE_HANDSET_EXTRA_VOL : SND_DEVICE_OUT_VOICE_HANDSET;
+#else
                 snd_device = SND_DEVICE_OUT_VOICE_HANDSET;
+#endif
         } else if (devices & AUDIO_DEVICE_OUT_TELEPHONY_TX)
             snd_device = SND_DEVICE_OUT_VOICE_TX;
 
