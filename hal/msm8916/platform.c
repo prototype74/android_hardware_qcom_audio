@@ -2985,10 +2985,8 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
                 else if (adev->sec_phone_type == 1)
                     snd_device = SND_DEVICE_IN_VOICE_CP2_MAIN_MIC;
                 else
-                    snd_device = SND_DEVICE_IN_VOICE_DMIC;
-#else
-                snd_device = SND_DEVICE_IN_HANDSET_MIC;
 #endif
+                snd_device = SND_DEVICE_IN_HANDSET_MIC;
                 if (audio_extn_hfp_is_active(adev))
                     platform_set_echo_reference(adev, true, out_device);
             } else {
